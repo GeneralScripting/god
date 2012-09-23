@@ -17,10 +17,21 @@
 # limitations under the License.
 #
 
-include_recipe "runit"
-
 gem_package "god" do
   action :install
+end
+
+bash "create rvm god wrapper" do
+  code <<-EOH
+  rvm wrapper 1.9.3-p194 bootup god
+  EOH
+end
+
+template "/etc/init.d/god" do
+  source "god.init.erb"
+  owner "root"
+  group "root"
+  mode "0755"
 end
 
 directory "/etc/god/conf.d" do
@@ -37,4 +48,7 @@ template "/etc/god/master.god" do
   mode 0755
 end
 
-runit_service "god"
+service "god" do
+  supports :status => true, :restart => true, :reload => true
+  action [:enable, :start]
+end
